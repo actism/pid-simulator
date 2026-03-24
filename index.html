@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PID Tuning Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1><span class="gradient-text">PID</span> Tuning Simulator</h1>
+            <p>Advanced First-Order Plus Dead Time (FOPDT) Control Panel</p>
+        </header>
+
+        <main class="dashboard">
+            <!-- Left Panel: Controls -->
+            <div class="panel controls-panel glass">
+                <section class="control-group">
+                    <h2>Plant Model (FOPDT)</h2>
+                    <p class="formula">G(s) = K / (1 + Ts) * e<sup>-Ls</sup></p>
+                    <div class="input-block">
+                        <label for="plant-k">Process Gain (K)</label>
+                        <input type="number" id="plant-k" value="1.0" step="0.1" min="0.1">
+                    </div>
+                    <div class="input-block">
+                        <label for="plant-t">Time Constant (T) [s]</label>
+                        <input type="number" id="plant-t" value="10.0" step="0.1" min="0.1">
+                    </div>
+                    <div class="input-block">
+                        <label for="plant-l">Dead Time (L) [s]</label>
+                        <input type="number" id="plant-l" value="2.0" step="0.1" min="0.1">
+                    </div>
+                </section>
+
+                <section class="control-group">
+                    <h2>Auto Tuning (Ziegler-Nichols)</h2>
+                    <div class="button-group">
+                        <button id="btn-tune-p" class="btn btn-outline">P Control</button>
+                        <button id="btn-tune-pi" class="btn btn-outline">PI Control</button>
+                        <button id="btn-tune-pid" class="btn btn-primary">PID Control</button>
+                    </div>
+                </section>
+
+                <section class="control-group">
+                    <h2>PID Parameters</h2>
+                    <div class="input-block range-block">
+                        <div class="range-header">
+                            <label for="pid-kp">Proportional (Kp)</label>
+                            <span id="val-kp">0.00</span>
+                        </div>
+                        <input type="range" id="pid-kp" value="6.0" step="0.01" min="0" max="50">
+                        <input type="number" id="num-kp" value="6.0" step="0.01" class="hidden-input">
+                    </div>
+                    <div class="input-block range-block">
+                        <div class="range-header">
+                            <label for="pid-ki">Integral (Ki)</label>
+                            <span id="val-ki">0.00</span>
+                        </div>
+                        <input type="range" id="pid-ki" value="1.5" step="0.01" min="0" max="20">
+                        <input type="number" id="num-ki" value="1.5" step="0.01" class="hidden-input">
+                    </div>
+                    <div class="input-block range-block">
+                        <div class="range-header">
+                            <label for="pid-kd">Derivative (Kd)</label>
+                            <span id="val-kd">0.00</span>
+                        </div>
+                        <input type="range" id="pid-kd" value="6.0" step="0.01" min="0" max="50">
+                        <input type="number" id="num-kd" value="6.0" step="0.01" class="hidden-input">
+                    </div>
+                </section>
+                
+                <section class="control-group">
+                    <button id="btn-simulate" class="btn btn-hero">Run Simulation</button>
+                </section>
+            </div>
+
+            <!-- Right Panel: Visualization -->
+            <div class="panel vis-panel glass">
+                <div class="chart-container">
+                    <canvas id="stepResponseChart"></canvas>
+                </div>
+                <div class="metrics">
+                    <div class="metric-card">
+                        <span class="metric-label">Overshoot</span>
+                        <span class="metric-value" id="metric-overshoot">-- %</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Settling Time</span>
+                        <span class="metric-value" id="metric-settling">-- s</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Steady-State Error</span>
+                        <span class="metric-value" id="metric-sse">--</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
