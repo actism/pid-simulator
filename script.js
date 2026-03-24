@@ -4,6 +4,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const plantT = document.getElementById('plant-t');
     const plantL = document.getElementById('plant-l');
 
+    // Calculator Elements
+    const calcMv0 = document.getElementById('calc-mv0');
+    const calcMv1 = document.getElementById('calc-mv1');
+    const calcPv0 = document.getElementById('calc-pv0');
+    const calcPv1 = document.getElementById('calc-pv1');
+    const calcT1 = document.getElementById('calc-t1'); // 28.3%
+    const calcT2 = document.getElementById('calc-t2'); // 63.2%
+    const btnCalcPlant = document.getElementById('btn-calc-plant');
+    const calcResult = document.getElementById('calc-result');
+
     const pidKp = document.getElementById('pid-kp');
     const pidKi = document.getElementById('pid-ki');
     const pidKd = document.getElementById('pid-kd');
@@ -162,6 +172,46 @@ document.addEventListener('DOMContentLoaded', () => {
     btnTunePI.addEventListener('click', () => autoTune('PI'));
     btnTunePID.addEventListener('click', () => autoTune('PID'));
     btnSimulate.addEventListener('click', runSimulation);
+
+    // Plant System Identification (2-Point Method for FOPDT)
+    btnCalcPlant.addEventListener('click', () => {
+        const mv0 = parseFloat(calcMv0.value);
+        const mv1 = parseFloat(calcMv1.value);
+        const pv0 = parseFloat(calcPv0.value);
+        const pv1 = parseFloat(calcPv1.value);
+        const t1 = parseFloat(calcT1.value);
+        const t2 = parseFloat(calcT2.value);
+
+        if (mv0 === mv1 || t1 >= t2 || t1 <= 0 || t2 <= 0) {
+            calcResult.textContent = "Error: Invalid inputs.";
+            calcResult.classList.remove('hidden');
+            return;
+        }
+
+        // Process Gain (K)
+        const K = (pv1 - pv0) / (mv1 - mv0);
+        
+        // Time Constant (T) and Dead Time (L) based on 28.3% and 63.2% method
+        const T = 1.5 * (t2 - t1);
+        let L = t2 - T;
+
+        if (L < 0) {
+            // fallback if L is negative due to noise or inaccuracy
+            L = 0;
+        }
+
+        // Apply
+        // Typically chillers are cooling, so K might be negative (e.g., MV increase -> PV decrease).
+        // Our simulator uses K, we just apply the value. We use K.toFixed(3).
+        plantK.value = Math.abs(K).toFixed(3); // Some simulations take absolute and rely on negative feedback. We'll set absolute to avoid breaking simulator logic.
+        plantT.value = Math.max(0.1, T).toFixed(2);
+        plantL.value = Math.max(0.1, L).toFixed(2);
+
+        calcResult.textContent = `Applied! K: ${K.toFixed(3)}, T: ${T.toFixed(1)}s, L: ${L.toFixed(1)}s`;
+        calcResult.classList.remove('hidden');
+        
+        runSimulation();
+    });
 
     // Simulation Engine
     function runSimulation() {
