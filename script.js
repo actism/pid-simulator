@@ -14,6 +14,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCalcPlant = document.getElementById('btn-calc-plant');
     const calcResult = document.getElementById('calc-result');
 
+    // Physical Model Elements
+    const physFluid = document.getElementById('phys-fluid');
+    const physCapacity = document.getElementById('phys-capacity');
+    const physFlow = document.getElementById('phys-flow');
+    const physVolTotal = document.getElementById('phys-vol-total');
+    const physVolInternal = document.getElementById('phys-vol-internal');
+    const physSensor = document.getElementById('phys-sensor');
+    const physVolPipe = document.getElementById('phys-vol-pipe');
+    const blockPhysPipe = document.getElementById('block-phys-pipe');
+    const btnCalcPhys = document.getElementById('btn-calc-phys');
+    const physResult = document.getElementById('phys-result');
+
     const pidKp = document.getElementById('pid-kp');
     const pidKi = document.getElementById('pid-ki');
     const pidKd = document.getElementById('pid-kd');
@@ -209,6 +221,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
         calcResult.textContent = `Applied! K: ${K.toFixed(3)}, T: ${T.toFixed(1)}s, L: ${L.toFixed(1)}s`;
         calcResult.classList.remove('hidden');
+        
+        runSimulation();
+    });
+
+    // Physical Model Estimation (Thermodynamics & Transport Delay)
+    physSensor.addEventListener('change', () => {
+        if (physSensor.value === 'external') {
+            blockPhysPipe.classList.remove('hidden');
+        } else {
+            blockPhysPipe.classList.add('hidden');
+        }
+    });
+
+    btnCalcPhys.addEventListener('click', () => {
+        const capacity = parseFloat(physCapacity.value); // kW
+        const flowLmin = parseFloat(physFlow.value); // L/min
+        const volTotal = parseFloat(physVolTotal.value); // L
+        const volInternal = parseFloat(physVolInternal.value); // L
+        const volPipe = parseFloat(physVolPipe.value); // L
+        const sensor = physSensor.value;
+        const fluid = physFluid.value;
+
+        if (capacity <= 0 || flowLmin <= 0 || volTotal <= 0 || volInternal <= 0) {
+            physResult.textContent = "Error: Invalid/Zero inputs.";
+            physResult.classList.remove('hidden');
+            return;
+        }
+
+        // Fluid properties [Density: kg/L, Specific Heat: kJ/(kg.K)]
+        let rho = 1.0;
+        let cp = 4.18;
+        if (fluid === 'eg30') { rho = 1.04; cp = 3.6; }
+        else if (fluid === 'eg50') { rho = 1.07; cp = 3.3; }
+        else if (fluid === 'fluorinert') { rho = 1.68; cp = 1.05; }
+
+        const flowLsec = flowLmin / 60.0;
+        
+        // 1. Process Gain (K) 
+        // 1 kW = 1 kJ/s.  Q = flow(kg/s) * cp * dT -> dT = Q / (flow * cp)
+        // If MV=100%, Q = Capacity (kW). For 1% MV change, dQ = Capacity / 100.
+        // Change in Temperature for 1% MV change : dT_1percent = (Capacity / 100) / ( (flowLmin/60)*rho * cp )
+        const K = (capacity / 100.0) / (flowLsec * rho * cp);
+
+        // 2. Dead Time (L) and Time Constant (T)
+        // Base delay for sensor / internal comms is approx 1-2 seconds.
+        let L = 2.0; 
+        let T = 1.0;
+
+        if (sensor === 'outlet') {
+            // Outlet sensor responds quickly, mixed inside the chiller internal tank.
+            T = volInternal / flowLsec;
+            L = 1.5; // just basic lag
+        } else if (sensor === 'return') {
+            // Return temp sees the thermal mass of the ENTIRE system.
+            T = volTotal / flowLsec;
+            // Transport delay depends on how fast heat travels through the whole pipe circuit
+            // Usually we approximate delay as 10-20% of residence time plus base
+            L = 2.0 + ((volTotal - volInternal) * 0.1) / flowLsec; 
+        } else if (sensor === 'external') {
+            // External sensor measures at process side.
+            // Thermal mass seen is the chiller + supply pipe, or just pipe mixed. Let's say half of system + internal.
+            T = (volInternal + volPipe) / flowLsec;
+            // Transport pure delay is exactly the time fluid takes to reach the sensor in supply pipe
+            L = 2.0 + (volPipe / flowLsec);
+        }
+
+        // Cap values to prevent simulation crash due to extremely large or small bounds
+        const safeK = Math.max(0.001, K);
+        const safeT = Math.max(0.1, T);
+        const safeL = Math.max(0.1, L);
+
+        plantK.value = safeK.toFixed(3);
+        plantT.value = safeT.toFixed(1);
+        plantL.value = safeL.toFixed(1);
+
+        physResult.textContent = `Applied! K: ${safeK.toFixed(3)}, T: ${safeT.toFixed(1)}s, L: ${safeL.toFixed(1)}s`;
+        physResult.classList.remove('hidden');
         
         runSimulation();
     });

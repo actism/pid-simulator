@@ -139,6 +139,30 @@ h2::before {
     border-color: var(--primary);
 }
 
+.input-select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+    appearance: none;
+}
+
+.input-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.input-select option {
+    background: var(--bg-dark);
+    color: var(--text-main);
+}
+
 .calc-accordion {
     margin-bottom: 1.5rem;
     background: rgba(255,255,255,0.03);

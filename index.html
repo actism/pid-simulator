@@ -40,6 +40,48 @@
                         </div>
                     </details>
 
+                    <details class="calc-accordion">
+                        <summary>Physical Model Estimation (Chiller spec)</summary>
+                        <div class="calc-panel">
+                            <p class="calc-desc">Calculate theoretical K, T, L based on chiller physics and sensor location.</p>
+                            
+                            <div class="input-block">
+                                <label>Fluid Type</label>
+                                <select id="phys-fluid" class="input-select">
+                                    <option value="water">Water (水)</option>
+                                    <option value="eg30">Ethylene Glycol 30%</option>
+                                    <option value="eg50">Ethylene Glycol 50%</option>
+                                    <option value="fluorinert">Fluorinert (フッ素系・ガルデン等)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="input-grid">
+                                <div class="input-block"><label>Max Capacity (kW)</label><input type="number" id="phys-capacity" value="10.0" min="0.1"></div>
+                                <div class="input-block"><label>Flow Rate (L/min)</label><input type="number" id="phys-flow" value="20.0" min="0.1"></div>
+                                <div class="input-block"><label>Total Sys. Vol.(L)</label><input type="number" id="phys-vol-total" value="50.0" min="1.0"></div>
+                                <div class="input-block"><label>Chiller Int. Vol.(L)</label><input type="number" id="phys-vol-internal" value="5.0" min="0.1"></div>
+                            </div>
+                            
+                            <div class="input-block" style="margin-top: 10px;">
+                                <label>Temperature Control Sensor Point</label>
+                                <select id="phys-sensor" class="input-select" style="margin-bottom: 0px;">
+                                    <option value="outlet">Outlet (チラー出口)</option>
+                                    <option value="return">Return (プロセス戻り)</option>
+                                    <option value="external">External (外部機器付近など)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="input-block hidden" id="block-phys-pipe" style="margin-top: 10px;">
+                                <label>Pipe Vol. to Ext Sensor (L)</label>
+                                <input type="number" id="phys-vol-pipe" value="2.0" min="0.0">
+                                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">※配管容積：チラーからセンサーまでの物理距離と内径から推測される液量</p>
+                            </div>
+                            
+                            <button id="btn-calc-phys" class="btn btn-outline btn-sm" style="margin-top: 12px;">Estimate & Apply</button>
+                            <div id="phys-result" class="calc-result hidden">K: -, T: -, L: -</div>
+                        </div>
+                    </details>
+
                     <div class="input-block">
                         <label for="plant-k">Process Gain (K)</label>
                         <input type="number" id="plant-k" value="1.0" step="0.1" min="0.1">
